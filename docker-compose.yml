@@ -1,0 +1,62 @@
+version: "3.5"  # optional since v1.27.0
+services:
+  nginx:
+    image: nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/log:/var/log/nginx/
+    networks:
+      - rabbit-network
+  rabbitmq1:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq1
+    volumes:
+      - ./node1/etc:/etc/rabbitmq/
+      - ./node1/data:/var/lib/rabbitmq/
+      - ./node1/logs:/var/log/rabbitmq/
+    environment:
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - 5672:5672
+      - 15672:15672
+    networks:
+      - rabbit-network
+  rabbitmq2:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq2
+    volumes:
+      - ./node2/etc:/etc/rabbitmq/
+      - ./node2/data:/var/lib/rabbitmq/
+      - ./node2/logs:/var/log/rabbitmq/
+    environment:
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - 5673:5672
+      - 15673:15672
+    networks:
+      - rabbit-network
+  rabbitmq3:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq3
+    volumes:
+      - ./node3/etc:/etc/rabbitmq/
+      - ./node3/data:/var/lib/rabbitmq/
+      - ./node3/logs:/var/log/rabbitmq/
+    environment:
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - 5674:5672
+      - 15674:15672
+    networks:
+      - rabbit-network
+networks:
+  rabbit-network:
