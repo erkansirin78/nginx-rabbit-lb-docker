@@ -1,26 +1,17 @@
 version: "3.5"  # optional since v1.27.0
 services:
-  nginx:
-    image: nginx
-    container_name: nginx
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/log:/var/log/nginx/
-    networks:
-      - rabbit-network
   rabbitmq1:
     image: rabbitmq:3-management-alpine
+    hostname: rabbitmq1
     container_name: rabbitmq1
     volumes:
       - ./node1/etc:/etc/rabbitmq/
       - ./node1/data:/var/lib/rabbitmq/
       - ./node1/logs:/var/log/rabbitmq/
+      - ./node1/.erlang.cookie:$HOME/.erlang.cookie
     environment:
-      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
     ports:
       - 5672:5672
       - 15672:15672
@@ -28,15 +19,21 @@ services:
       - rabbit-network
   rabbitmq2:
     image: rabbitmq:3-management-alpine
+    hostname: rabbitmq2
+    links:
+      - rabbitmq1
     container_name: rabbitmq2
     volumes:
       - ./node2/etc:/etc/rabbitmq/
       - ./node2/data:/var/lib/rabbitmq/
       - ./node2/logs:/var/log/rabbitmq/
+      - ./node2/.erlang.cookie:$HOME/.erlang.cookie
     environment:
-      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      CLUSTERED: "true"
+      CLUSTER_WITH: rabbitmq1
+      RAM_NODE: "true"
     ports:
       - 5673:5672
       - 15673:15672
@@ -44,18 +41,39 @@ services:
       - rabbit-network
   rabbitmq3:
     image: rabbitmq:3-management-alpine
+    hostname: rabbitmq3
+    links:
+      - rabbitmq1
+      - rabbitmq2
     container_name: rabbitmq3
     volumes:
       - ./node3/etc:/etc/rabbitmq/
       - ./node3/data:/var/lib/rabbitmq/
       - ./node3/logs:/var/log/rabbitmq/
+      - ./node3/.erlang.cookie:$HOME/.erlang.cookie
     environment:
-      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      CLUSTERED: "true"
+      CLUSTER_WITH: rabbitmq1
     ports:
       - 5674:5672
       - 15674:15672
+    networks:
+      - rabbit-network
+  nginx:
+    depends_on:
+      - rabbitmq1
+      - rabbitmq2
+      - rabbitmq3
+    image: nginx
+    container_name: nginx
+    ports:
+      - "5000:80"
+      - "15000:15000"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/log:/var/log/nginx/
     networks:
       - rabbit-network
 networks:
