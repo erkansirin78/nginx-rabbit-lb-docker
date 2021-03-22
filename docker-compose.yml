@@ -1,61 +1,51 @@
 version: "3.5"  # optional since v1.27.0
 services:
-  rabbitmq1:
-    image: rabbitmq:3-management-alpine
-    hostname: rabbitmq1
-    container_name: rabbitmq1
+  rabbit-1:
+    image: rabbitmq:3.8-management
+    hostname: rabbit-1
+    container_name: rabbit-1
     volumes:
-      - ./node1/etc:/etc/rabbitmq/
-      - ./node1/data:/var/lib/rabbitmq/
-      - ./node1/logs:/var/log/rabbitmq/
-      - ./node1/.erlang.cookie:$HOME/.erlang.cookie
+      - ${PWD}/config/rabbit-1:/config/    
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
+      RABBITMQ_CONFIG_FILE: /config/rabbitmq
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST}
     ports:
       - 5672:5672
       - 15672:15672
     networks:
       - rabbit-network
-  rabbitmq2:
-    image: rabbitmq:3-management-alpine
-    hostname: rabbitmq2
-    links:
-      - rabbitmq1
-    container_name: rabbitmq2
+  rabbit-2:
+    image: rabbitmq:3.8-management
+    hostname: rabbit-2
+    depends_on:
+      - rabbit-1
+    container_name: rabbit-2
     volumes:
-      - ./node2/etc:/etc/rabbitmq/
-      - ./node2/data:/var/lib/rabbitmq/
-      - ./node2/logs:/var/log/rabbitmq/
-      - ./node2/.erlang.cookie:$HOME/.erlang.cookie
+      - ${PWD}/config/rabbit-2:/config/
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-      CLUSTERED: "true"
-      CLUSTER_WITH: rabbitmq1
-      RAM_NODE: "true"
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
+      RABBITMQ_CONFIG_FILE: /config/rabbitmq
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST}
     ports:
       - 5673:5672
       - 15673:15672
     networks:
       - rabbit-network
-  rabbitmq3:
-    image: rabbitmq:3-management-alpine
-    hostname: rabbitmq3
-    links:
-      - rabbitmq1
-      - rabbitmq2
-    container_name: rabbitmq3
+  rabbit-3:
+    image: rabbitmq:3.8-management
+    hostname: rabbit-3
+    depends_on:
+      - rabbit-1
+    container_name: rabbit-3
     volumes:
-      - ./node3/etc:/etc/rabbitmq/
-      - ./node3/data:/var/lib/rabbitmq/
-      - ./node3/logs:/var/log/rabbitmq/
-      - ./node3/.erlang.cookie:$HOME/.erlang.cookie
+      - ${PWD}/config/rabbit-3:/config/
     environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-      CLUSTERED: "true"
-      CLUSTER_WITH: rabbitmq1
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE}
+      RABBITMQ_CONFIG_FILE: /config/rabbitmq
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_DEFAULT_VHOST}
     ports:
       - 5674:5672
       - 15674:15672
@@ -63,17 +53,17 @@ services:
       - rabbit-network
   nginx:
     depends_on:
-      - rabbitmq1
-      - rabbitmq2
-      - rabbitmq3
+      - rabbit-1
+      - rabbit-2
+      - rabbit-3
     image: nginx
     container_name: nginx
     ports:
       - "5000:80"
       - "15000:15000"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/log:/var/log/nginx/
+      - ${PWD}/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ${PWD}/nginx/log:/var/log/nginx/
     networks:
       - rabbit-network
 networks:
