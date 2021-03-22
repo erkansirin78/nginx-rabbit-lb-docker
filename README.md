@@ -4,8 +4,7 @@ Using Nginx as load balancer with rabbitmq cluster
 You might need to use nginx as load balancer in front of rabbitmq cluster for several reasons. In this project you will have this poc env with one nginx and three rabbitmqnodes as clustered within a few minutes thanks to docker compose. I used official nginx and rabbitmq images so you don't need to upgrade or maintain your images.
 
 ```
-git clone 
-https://github.com/erkansirin78/nginx-rabbit-lb-docker.git
+git clone https://github.com/erkansirin78/nginx-rabbit-lb-docker.git
 cd nginx-rabbit-lb-docker
 docker-compose up -d
 ```
